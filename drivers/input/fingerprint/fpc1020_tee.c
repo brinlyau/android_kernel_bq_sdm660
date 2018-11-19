@@ -36,7 +36,6 @@
 #include <linux/platform_device.h>
 #include <linux/regulator/consumer.h>
 #include <linux/wakelock.h>
-#include <linux/proc_fs.h>
 #include <linux/notifier.h>
 #include <linux/fb.h>
 #include <linux/mdss_io_util.h>
@@ -54,9 +53,6 @@
 #define PWR_ON_SLEEP_MAX_US (PWR_ON_SLEEP_MIN_US + 900)
 
 #define NUM_PARAMS_REG_ENABLE_SET 2
-#define PROC_NAME  "fp_info"
-
-static struct proc_dir_entry *proc_entry;
 extern int fpsensor;
 
 static const char * const pctl_names[] = {
@@ -489,8 +485,6 @@ static irqreturn_t fpc1020_irq_handler(int irq, void *handle)
 {
 	struct fpc1020_data *fpc1020 = handle;
 
-	dev_dbg(fpc1020->dev, "%s\n", __func__);
-
 	if (atomic_read(&fpc1020->wakeup_enabled)) {
 		wake_lock_timeout(&fpc1020->ttw_wl,
 					msecs_to_jiffies(FPC_TTW_HOLD_TIME));
@@ -567,25 +561,7 @@ static struct notifier_block fpc_notif_block = {
 	.notifier_call = fpc_fb_notif_callback,
 };
 
-static int proc_show_ver(struct seq_file *file,void *v)
-{
-	seq_printf(file,"[Vendor]fpc1028,Truly\n");
-	return 0;
-}
 
-static int proc_open(struct inode *inode,struct file *file)
-{
-	printk("fpc proc_open\n");
-	single_open(file,proc_show_ver,NULL);
-	return 0;
-}
-
-static const struct file_operations proc_file_fpc_ops = {
-	.owner = THIS_MODULE,
-	.open = proc_open,
-	.read = seq_read,
-	.release = single_release,
-};
 
 static int fpc1020_probe(struct platform_device *pdev)
 {
@@ -694,16 +670,6 @@ static int fpc1020_probe(struct platform_device *pdev)
 
 	rc = hw_reset(fpc1020);
 
-	 proc_entry = proc_create(PROC_NAME, 0777, NULL, &proc_file_fpc_ops);
-    	 if (NULL == proc_entry)
-             {
-                 printk(" gf3208 Couldn't create proc entry!");
-                 return -ENOMEM;
-             }
-             else
-             {
-                 printk("gf3208 Create proc entry success!");
-             }
 
 
 	dev_err(dev, "%s: ok\n", __func__);
@@ -726,7 +692,6 @@ static int fpc1020_remove(struct platform_device *pdev)
 	(void)vreg_setup(fpc1020, "vdd_ana", false);
 	(void)vreg_setup(fpc1020, "vdd_io", false);
 	(void)vreg_setup(fpc1020, "vcc_spi", false);
-	remove_proc_entry(PROC_NAME,NULL);
 	dev_info(&pdev->dev, "%s\n", __func__);
 
 	return 0;
