@@ -53,7 +53,6 @@
 #define PWR_ON_SLEEP_MAX_US (PWR_ON_SLEEP_MIN_US + 900)
 
 #define NUM_PARAMS_REG_ENABLE_SET 2
-extern int fpsensor;
 
 static const char * const pctl_names[] = {
 	"fpc1020_reset_reset",
@@ -184,14 +183,10 @@ static ssize_t fingerdown_wait_set(struct device *dev,
  {
 	struct fpc1020_data *fpc1020 = dev_get_drvdata(dev);
 	dev_dbg(fpc1020->dev, "%s\n", __func__);
-	if (!strncmp(buf, "enable", strlen("enable"))){
-		printk("wait_finger_down enable\n");
+	if (!strncmp(buf, "enable", strlen("enable")))
 		fpc1020->wait_finger_down = true;
-	}
-	else if (!strncmp(buf, "disable", strlen("disable"))){
-		printk("wait_finger_down disable\n");
+	else if (!strncmp(buf, "disable", strlen("disable")))
 		fpc1020->wait_finger_down = false;
-	}
 	else
 		return -EINVAL;
 
@@ -715,13 +710,7 @@ static struct platform_driver fpc1020_driver = {
 
 static int __init fpc1020_init(void)
 {
-	int rc;
-	if(fpsensor != 1){
-                 pr_err("andy fpc1020_probe failed as fpsensor=%d(1=fp)\n", fpsensor);
-                 return -1;
-         }
-	printk("andytest!!!!!!!!!!!!!");
-	rc = platform_driver_register(&fpc1020_driver);
+	int rc = platform_driver_register(&fpc1020_driver);
 
 	if (!rc)
 		pr_info("%s OK\n", __func__);
